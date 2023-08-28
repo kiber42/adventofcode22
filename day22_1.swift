@@ -1,5 +1,18 @@
 import Foundation
 
+// -----------------------------------------------------------------------------
+
+func loadInput() -> String {
+  let filename = CommandLine.arguments.count > 1 ?
+    CommandLine.arguments[1] : exampleFilename
+  do {
+    return try String(contentsOfFile: filename)
+  } catch {
+    print("Could not load input from '\(filename)'.")
+    exit(1)
+  }
+}
+
 struct Pos {
   let x: Int
   let y: Int
@@ -16,7 +29,6 @@ struct RowOrColumn : CustomStringConvertible {
   let obstacles : [Int]
 
   var description: String {
-//    return "\(start)...\(end) #[\(obstacles.map({ "\($0)" }).joined(separator: ","))]"
     return String(repeating: " ", count: start) + (start...end).map({ x in obstacles.contains(x) ? "#" : "."}).joined()
   }
 }
@@ -140,22 +152,19 @@ func parseMoves(_ input: String.SubSequence) -> [Move] {
   return seq
 }
 
-let filename = CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : "example22.txt"
-do {
-  let contents = try String(contentsOfFile: filename)
-  let blocks = contents.split(separator: "\n\n")
-  assert(blocks.count == 2)
-  let maze = Maze(blocks[0])
-  let moves = parseMoves(blocks[1])
+// -----------------------------------------------------------------------------
 
-  var pos = Pos(maze.rows.first!.start, 0)
-  var dir = Direction.right
-  print("Start at \(pos.x + 1), \(pos.y + 1), facing \(dir)")
-  for move in moves {
-    (pos, dir) = move.apply(pos, dir, maze)
-    print("\(move)\t=> at \(pos.x + 1), \(pos.y + 1), facing \(dir)")
-  }
-  print("Part 1: \(1000 * (pos.y + 1) + 4 * (pos.x + 1) + (dir.rawValue))")
-} catch {
-  print("Could not load input from '\(filename)'.")
+let exampleFilename = "example22.txt"
+
+let inputParts = loadInput().split(separator: "\n\n")
+let maze = Maze(inputParts[0])
+let moves = parseMoves(inputParts[1])
+
+var pos = Pos(maze.rows.first!.start, 0)
+var dir = Direction.right
+print("Start at \(pos.x + 1), \(pos.y + 1), facing \(dir)")
+for move in moves {
+  (pos, dir) = move.apply(pos, dir, maze)
+  print("\(move)\t=> at \(pos.x + 1), \(pos.y + 1), facing \(dir)")
 }
+print("Part 1: \(1000 * (pos.y + 1) + 4 * (pos.x + 1) + (dir.rawValue))")
