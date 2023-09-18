@@ -1,4 +1,6 @@
+from math import factorial
 import numpy as np
+from itertools import permutations, combinations
 import sys
 
 class Cave:
@@ -6,7 +8,6 @@ class Cave:
         self.flowRates, self.allConnections, self.names = Cave.loadInput()
         self.distances = Cave.computeDistances(self.allConnections)
         self.removeBrokenValves()
-        self.numNodes = len(self.flowRates)
 
 
     def loadInput():
@@ -52,20 +53,18 @@ class Cave:
         self.names = [self.names[i] for i in working]
 
     
-    def computeReleasedPressure(self, pos, visitedBitmask, flow, released, timeLeft):
-        for node in range(self.numNodes):
-            bit = 1 << node
-            if visitedBitmask & bit == 1:
-                continue
-            visitedBitmask += bit
-            # opening valve requires one unit of time
-            timeNeeded = self.distances[pos, node] + 1
-            if timeLeft <= timeNeeded:
-                break
-
+    def computeReleasedPressure(self, steps, timeLeft):
+        assert len(set(steps)) == len(steps), "steps must not contain duplicates"
+        pos = 0
+        currentFlow = 0
+        releasedPressure = 0
+        usedSteps = 0
         while usedSteps < len(steps):
             goal = steps[usedSteps]
-
+            # opening valve requires one unit of time
+            timeNeeded = self.distances[pos, goal] + 1
+            if timeLeft <= timeNeeded:
+                break
             timeLeft -= timeNeeded
             releasedPressure += currentFlow * timeNeeded
             pos = goal
@@ -253,7 +252,7 @@ class Cave:
 
 if __name__ == "__main__":
     cave = Cave()
-#    print("Part 1:", cave.findMaximalPressure())
-    print("Part 2:", cave.findMaximalPressureWithElephant())
+    print("Part 1:", cave.findMaximalPressure())
+#    print("Part 2:", cave.findMaximalPressureWithElephant())
 
 # Max so far: 1720 CA JF LE FP YH UX AR DM
