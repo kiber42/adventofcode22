@@ -1,27 +1,30 @@
 import Foundation
 
-let filename = CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : "example02.txt"
-do
-{
-    let rounds = try String(contentsOfFile: filename).split(separator:"\n")
-    let choices = rounds.map({
-        // Opponent's choice
-        let first = Int($0.first!.asciiValue!) - Int(("A" as Character).asciiValue!) + 1
-        // My choice (part 1) or desired outcome (part 2)
-        let second = Int($0.last!.asciiValue!) - Int(("X" as Character).asciiValue!) + 1
-        return (first, second)
-    })
+// Parse input and return the choices for each round
+func getChoices(args: [String]) -> [(Int, Int)] {
+  let filename = args.count > 1 ? args[1] : "example02.txt"
+  let data = try! String(contentsOfFile: filename)
 
-    let computeScore = { opponent, mine in
-        3 * ((mine - opponent + 4) % 3) + mine
-    }
-    let scoreOne = choices.map(computeScore).reduce(0, +)
-    let scoreTwo = choices.map({ (opponent, outcome) in
-        computeScore(opponent, (opponent + outcome) % 3 + 1)
-    }).reduce(0, +)
-
-    print("Part 1: \(scoreOne)")
-    print("Part 2: \(scoreTwo)")
-} catch {
-    print("Could not load input from '\(filename)'.")
+  // Convert choices (A,B,C or X,Y,Z) to numeric values (1,2,3)
+  return data.split(separator: "\n").map {
+    // First item = opponent's choice
+    let opponent = Int($0.first!.asciiValue!) - Int(("A" as Character).asciiValue!) + 1
+    // Second item = my choice (part 1) OR desired outcome (part 2)
+    let mine = Int($0.last!.asciiValue!) - Int(("X" as Character).asciiValue!) + 1
+    return (opponent, mine)
+  }
 }
+
+func computeScore(opponentsChoice: Int, myChoice: Int) -> Int {
+  let outcome = (myChoice - opponentsChoice + 4) % 3  // +1: win, -1: loss, 0: draw
+  return 3 * outcome + myChoice
+}
+
+func pickResponseFor(opponentsChoice: Int, desiredOutcome: Int) -> (Int, Int) {
+  // return a pair that also has opponentsChoice again, to allow easy chaining of functions
+  return (opponentsChoice, (opponentsChoice + desiredOutcome) % 3 + 1)
+}
+
+let choices = getChoices(args: CommandLine.arguments)
+print("Part 1:", choices.map(computeScore).reduce(0, +))
+print("Part 2:", choices.map(pickResponseFor).map(computeScore).reduce(0, +))
